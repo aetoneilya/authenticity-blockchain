@@ -3,21 +3,20 @@ from nis import match
 from posixpath import split
 import re
 from brownie import Authenticity, accounts
-from scripts.common import get_contract
+from scripts.common import get_account, get_contract
 from scripts.deploy import deploy_authenticity
-
-# def read_authenticity():
-
+ 
 
 def authenticity_start():
+    account = get_account()
     print('Authenticity start')
 
     print('Enter contract address\nEnter "deploy" to deploy a new one')
     cmd = input("> ").split()
     
     if (cmd[0] == 'deploy'):
-        auth_contract = deploy_authenticity()
-    elif re.match('0x', cmd[0]):
+        auth_contract = deploy_authenticity(account)
+    elif re.match('0x*', cmd[0]):
         auth_contract = get_contract(cmd[0])
     else:
         print("Error")
@@ -30,7 +29,7 @@ def authenticity_start():
         cmdLen = len(cmd)
 
         if cmd[0] == 'deploy':
-            deploy_authenticity()
+            deploy_authenticity(account)
         elif cmd[0] == 'contract last':
             auth_contract = Authenticity[-1]
 
@@ -48,13 +47,25 @@ def authenticity_start():
                 print(f'Description: {itemData[4]}\n')
 
         elif cmd[0] == 'set':
-            if cmdLen >= 3 and cmd[1] == 'for' and cmd[2] == 'sale':
+            if cmdLen >= 4 and cmd[1] == 'for' and cmd[2] == 'sale':
                 auth_contract.setForSaleStatus(cmd[3] == 'true')
             elif cmdLen >= 4 and cmd[1] == 'price' and cmd[3] == 'wei':
                 auth_contract.setPriceWei(int(cmd[2]))
             elif cmdLen >= 2 and cmd[1] == 'stolen':
                 auth_contract.setStolenStatus(cmd[2] == 'true') 
         
+        elif cmd[0] == 'buy':
+            if cmdLen >= 1:
+                auth_contract.buy({"from": account, "value": int(cmd[1])})
+
+        elif cmd[0] == 'change' and cmd[1] == 'account':
+            print(f'account address {accounts[2].address}')
+            account = accounts[2]
+            
+
+        elif cmd[0] == 'account':
+            print(f'account address {account.address}')
+
         elif cmd[0] == 'exit':
             break
 
