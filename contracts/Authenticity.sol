@@ -67,10 +67,10 @@ contract Authenticity {
     /**
      * @dev Set item description, can't ba changed after cell
      */
-    function setItemDescription(string memory _description) public {
-        require(itemData.ownersCount == 0, "Can't be changed now");
-        itemData.description = _description;
-    }
+    // function setItemDescription(string memory _description) public {
+    //     require(itemData.ownersCount == 0, "Can't be changed now");
+    //     itemData.description = _description;
+    // }
 
     function setPriceWei(uint256 _price) public isOwner {
         itemData.price = _price;
@@ -94,6 +94,10 @@ contract Authenticity {
 
     function getOriginOwner() external view returns (address) {
         return originOwner;
+    }
+
+    function getItemData() external view returns (ItemData memory) {
+        return itemData;
     }
 
 }
