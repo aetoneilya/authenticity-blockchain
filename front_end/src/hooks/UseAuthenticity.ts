@@ -44,12 +44,12 @@ export const useGetOriginOwner = (contractAddress: string) => {
     return originOwner?.[0]
 }
 
-export const useGetItemData = (contractAddress: string) => {
+export const useGetIsForSale = (contractAddress: string) => {
     const authenticityContract = getAuthenticityContract(contractAddress)
 
-    const { value: itemData, error } = useCall(contractAddress && {
+    const { value: forSale, error } = useCall(contractAddress && {
         contract: authenticityContract,
-        method: 'getItemData',
+        method: 'getIsForSale',
         args: []
     }) ?? {}
 
@@ -58,7 +58,58 @@ export const useGetItemData = (contractAddress: string) => {
         return undefined
     }
 
-    return itemData?.[0]
+    return forSale?.[0]
+}
+
+export const useGetIsStolen = (contractAddress: string) => {
+    const authenticityContract = getAuthenticityContract(contractAddress)
+
+    const { value: isStolen, error } = useCall(contractAddress && {
+        contract: authenticityContract,
+        method: 'getIsStolen',
+        args: []
+    }) ?? {}
+
+    if (error) {
+        console.error(error.message)
+        return undefined
+    }
+
+    return isStolen?.[0]
+}
+
+export const useGetPriceWei = (contractAddress: string) => {
+    const authenticityContract = getAuthenticityContract(contractAddress)
+
+    const { value: priceWei, error } = useCall(contractAddress && {
+        contract: authenticityContract,
+        method: 'getPriceWei',
+        args: []
+    }) ?? {}
+
+    if (error) {
+        console.error(error.message)
+        return undefined
+    }
+
+    return priceWei?.[0]
+}
+
+export const useGetDescription = (contractAddress: string) => {
+    const authenticityContract = getAuthenticityContract(contractAddress)
+
+    const { value: description, error } = useCall(contractAddress && {
+        contract: authenticityContract,
+        method: 'getDescription',
+        args: []
+    }) ?? {}
+
+    if (error) {
+        console.error(error.message)
+        return undefined
+    }
+
+    return description?.[0]
 }
 
 export const UseChangeOwner = ( newOwnerAddress: string, contractAddress: string ) => {

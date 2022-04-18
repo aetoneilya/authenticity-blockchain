@@ -9,8 +9,8 @@ import json
 import os
 import shutil
 
-def deploy_authenticity(account, front_end_update=False):
-    authenticity = Authenticity.deploy({"from": account})
+def deploy_authenticity(account, description="", front_end_update=False):
+    authenticity = Authenticity.deploy(description,{"from": account})
     print(f"Contract deployed to {authenticity.address}")
     if front_end_update:
         update_front_end()
@@ -34,4 +34,5 @@ def copy_folders_to_front_end(src, dest):
 def main():
     account = get_account()
     print(f"Accaunt {account}")
-    deploy_authenticity(account, front_end_update=True)
+    contract_desc = input("Set description: ")
+    deploy_authenticity(account, description=contract_desc, front_end_update=True)

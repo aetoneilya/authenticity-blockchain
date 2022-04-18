@@ -4,10 +4,12 @@ networks:
   rinkeby:
     verify: True
   mainnet-fork-dev:
-    verify: False
+    verify: True
   development:
     verify: False
   ganache-local:
     verify: False
+  kovan:
+    verify: True
 wallets:
   from_key: ${PRIVATE_KEY}

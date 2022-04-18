@@ -11,12 +11,11 @@ contract Authenticity {
     struct ItemData {
         bool isForSale;
         bool isStolen;
-        uint256  price;
-        uint256 ownersCount;
+        uint256 price;
         string description;
     }
 
-    ItemData public itemData;
+    ItemData itemData;
     
     // event for EVM logging
     event OwnerSet(address indexed oldOwner, address indexed newOwner);
@@ -30,12 +29,13 @@ contract Authenticity {
     /**
      * @dev Set contract deployer as owner and as origin owner
      */
-    constructor() {
+    constructor(string memory _description) {
         owner = msg.sender;
         originOwner = msg.sender;
         emit OwnerSet(address(0), owner);
         itemData.isForSale = false;
         itemData.isStolen = false;
+        itemData.description = _description;
     }
 
     /**
@@ -45,7 +45,6 @@ contract Authenticity {
     function changeOwner(address newOwner) public isOwner {
         emit OwnerSet(owner, newOwner);
         owner = newOwner;
-        itemData.ownersCount++;
     }
 
     /**
@@ -61,7 +60,6 @@ contract Authenticity {
         payable(owner).transfer(address(this).balance);
         owner = msg.sender;
         emit OwnerSet(address(0), owner);
-        itemData.ownersCount++;
     }
 
     /**
@@ -73,10 +71,6 @@ contract Authenticity {
     // }
 
     function setPriceWei(uint256 _price) public isOwner {
-        itemData.price = _price;
-    }
-
-    function setPriceEth(uint256 _price) public isOwner {
         itemData.price = _price;
     }
 
@@ -96,8 +90,21 @@ contract Authenticity {
         return originOwner;
     }
 
-    function getItemData() external view returns (ItemData memory) {
-        return itemData;
+    function getIsForSale() external view returns (bool) {
+        return itemData.isForSale;
     }
+
+    function getIsStolen() external view returns (bool) {
+        return itemData.isStolen;
+    }
+
+    function getPriceWei() external view returns (uint256) {
+        return itemData.price;
+    }
+
+    function getDescription() external view returns (string memory) {
+        return itemData.description;
+    }
+
 
 }
