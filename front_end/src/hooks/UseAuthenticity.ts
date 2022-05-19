@@ -1,5 +1,5 @@
 import { Contract } from "@ethersproject/contracts"
-import { useContractFunction, useCall} from "@usedapp/core"
+import { useContractFunction, useCall } from "@usedapp/core"
 import Authenticity from "../chain-info/contracts/Authenticity.json"
 import { utils } from "ethers"
 
@@ -112,11 +112,39 @@ export const useGetDescription = (contractAddress: string) => {
     return description?.[0]
 }
 
-export const UseChangeOwner = ( newOwnerAddress: string, contractAddress: string ) => {
+export const useChangeOwner = (contractAddress: string) => {
     const authenticityContract = getAuthenticityContract(contractAddress)
     const { state, send } = useContractFunction(authenticityContract, 'changeOwner', { transactionName: 'changeOwner' })
 
-    send(newOwnerAddress)
+    return { state, send }
+}
+
+export const useSetPriceWei = (contractAddress: string) => {
+    const authenticityContract = getAuthenticityContract(contractAddress)
+    const { state, send } = useContractFunction(authenticityContract, 'setPriceWei', { transactionName: 'changeOwner' })
+
+    return { state, send }
+}
+
+export const useSetStolenStatus = (contractAddress: string) => {
+    const authenticityContract = getAuthenticityContract(contractAddress)
+    const { state, send } = useContractFunction(authenticityContract, 'setStolenStatus', { transactionName: 'changeOwner' })
+
+    return { state, send }
+}
+
+export const useSetForSaleStatus = (contractAddress: string) => {
+    const authenticityContract = getAuthenticityContract(contractAddress)
+    const { state, send } = useContractFunction(authenticityContract, 'setForSaleStatus', { transactionName: 'changeOwner' })
+
+    return { state, send }
+}
+
+export const useBuy = (contractAddress: string) => {
+    const authenticityContract = getAuthenticityContract(contractAddress)
+    const { state, send } = useContractFunction(authenticityContract, 'buy', { transactionName: 'changeOwner' })
+
+    return { state, send }
 }
 
 

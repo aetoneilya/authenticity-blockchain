@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useEthers, Rinkeby } from "@usedapp/core"
 import helperConfig from "../helper-config.json"
 import networkMapping from "../chain-info/deployments/map.json"
@@ -5,64 +6,152 @@ import { constants, utils } from "ethers"
 // import Authenticity from "../chain-info/contracts/Authenticity.json"
 import { Contract } from "@ethersproject/contracts"
 import { formatUnits } from "@ethersproject/units"
-import { Typography, TextField, Button, Grid, Box } from "@material-ui/core"
-import { useGetOwner, useGetOriginOwner, useGetIsForSale, useGetIsStolen, useGetPriceWei, useGetDescription } from "../hooks/UseAuthenticity"
+import { Typography, TextField, Button, Grid, Box, MenuItem, makeStyles, Card, CardContent } from "@material-ui/core"
+import {
+    useGetOwner, useGetOriginOwner, useGetIsForSale, useGetIsStolen,
+    useGetPriceWei, useGetDescription, useChangeOwner, useSetPriceWei,
+    useSetForSaleStatus, useSetStolenStatus, useBuy
+} from "../hooks/UseAuthenticity"
+
+const handleChange = (event: React.ChangeEvent<{}>, newValue: string) => {
+    console.log(newValue)
+}
+
+const useStyles = makeStyles({
+    field: {
+        marginTop: 20,
+        marginBottom: 20,
+        display: 'block'
+    }
+})
+
+const currencies = [
+    {
+        value: 'ETH',
+        label: 'ETH',
+    },
+    {
+        value: 'WEI',
+        label: 'WEI',
+    },
+];
 
 export const Main = () => {
+    const classes = useStyles()
+
     const { chainId } = useEthers()
+    const { account } = useEthers()
+
+    //TODO: replace in prod
+    const contractAddress = chainId === 42 || chainId === Rinkeby.chainId ? networkMapping[chainId.toString()]["Authenticity"][0] : constants.AddressZero
+    // var contractAddress = ''
+
     const networkName = chainId ? helperConfig[chainId] : "dev"
     console.log("ChainId: " + chainId)
     console.log("NetworkName: " + networkName)
+    console.log("Current contract: " + contractAddress)
 
-    const contractAddress = chainId === 42 || chainId === Rinkeby.chainId ? networkMapping[chainId.toString()]["Authenticity"][0] : constants.AddressZero
-    console.log(contractAddress)
+    const { send: changeowner, state: stateChangeOwner } = useChangeOwner(contractAddress)
+    const { send: setPriceWei, state: stateSetPrice } = useSetPriceWei(contractAddress)
+    const { send: setForSaleStatus, state: stateSetForSale } = useSetForSaleStatus(contractAddress)
+    const { send: setStolenStatus, state: stateSetStolen } = useSetStolenStatus(contractAddress)
+    const { send: buy, state: stateBuy } = useBuy(contractAddress)
 
-    //move it later
-    // const { abi } = Authenticity
-    // const authenticityInterface = new utils.Interface(abi)
-    // const authenticityContract = new Contract(contractAddress, authenticityInterface)
+    const [strContract, setStrContract] = useState('')
+    const [strNewOwner, setStrNewOwner] = useState('')
+    const [newPrice, setNewPrice] = useState('')
 
-    const { account } = useEthers()
+    const handleFind = () => {
+        // contractAddress = strContract
+        console.log(strContract)
+    }
+    // Origin owner {useGetOriginOwner(contractAddress)} {'\n'}
+    //         Is for sale {useGetIsForSale(contractAddress)?.toString()} {'\n'}
+    //         Is stolen {useGetIsStolen(contractAddress)?.toString()} {'\n'}
+    //         Price {price?.toString()} Wei {'\n'}
+    //         Description: {useGetDescription(contractAddress)?.toString()} {'\n'}
 
-    const isUserOwner = useGetOwner(contractAddress) === account
+    const owner = useGetOwner(contractAddress)
+    const originOwner = useGetOriginOwner(contractAddress)
+    const isForSale = useGetIsForSale(contractAddress)
+    const isStolen = useGetIsStolen(contractAddress)
+    const price = useGetPriceWei(contractAddress)
+    const description = useGetDescription(contractAddress)
+
+    const isUserOwner = owner === account
 
     return (<div>
         <Grid direction="row" container spacing={2} alignItems="center">
             <Grid item xs={8}>
                 <TextField
-                    required
+                    onChange={(e) => setStrContract(e.target.value)}
+                    className={classes.field}
                     fullWidth
                     label="Contract Address"
                     name="contract address"
+                    variant="outlined"
                 />
             </Grid>
-            <Grid>
-                <Button>Find</Button>
+            <Grid item xs={2}>
+                <Button onClick={handleFind} >Find</Button>
             </Grid>
         </Grid>
 
         <Typography variant="h5" component="pre">
-            Owner {useGetOwner(contractAddress)} {'\n'}
-            Origin owner {useGetOriginOwner(contractAddress)} {'\n'}
-            Is for sale {useGetIsForSale(contractAddress)?.toString()} {'\n'}
-            Is stolen {useGetIsStolen(contractAddress)?.toString()} {'\n'}
-            Price {useGetPriceWei(contractAddress)?.toString()} {'\n'}
-            Description {useGetDescription(contractAddress)?.toString()} {'\n'} 
+            Owner {owner} {'\n'}
+            Origin owner {originOwner} {'\n'}
+            {isForSale ? "Open for SALE" : "Not for sale"} {'\n'}
+            {isStolen ? "Stolen\n" : ""}
+            Price {price?.toString()} Wei {'\n'}
+            Description: {description?.toString()} {'\n'}
 
         </Typography>
         {isUserOwner ?
-            (<Grid>
-                <Button
-                // onClick={() => sendChangeOwner('0x407027Aea3C4CBB76ca4E9c4d65aB24687C6375b', contractAddress)}
-                >
-                    Change Owner
-                </Button>
-                <Button>Set Price</Button>
-                <Button>Set for sale</Button>
-                <Button>Set stolen status</Button>
+            (<Grid direction="row" spacing={5} item xs >
+                <Grid item xs >
+                    <TextField
+                        onChange={(e) => setStrNewOwner(e.target.value)}
+                        label="New owner address"
+                        name="New owner"
+                    />
+                    <Button
+                        onClick={() => changeowner(strNewOwner)}
+                    >
+                        Change Owner
+                    </Button>
+                </Grid>
+                <Grid alignItems="baseline">
+                    <TextField
+                        type="number"
+                        label="New price"
+                        name="New price"
+                        onChange={(e) => setNewPrice(e.target.value)}
+                    />
+                    <TextField
+                        id="outlined-select-currency"
+                        select
+                        label="currency"
+                        value={currencies[1].value}
+                        // onChange={handleChange}
+                        helperText="Please select your currency"
+                    >
+                        {currencies.map((option) => (
+                            <MenuItem key={option.value} value={option.value}>
+                                {option.label}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                    <Button onClick={() => setPriceWei(newPrice)}>Set Price</Button>
+                </Grid>
+                <Grid>
+                    <Button onClick={() => setForSaleStatus(!isForSale)}>{isForSale ? "set for sale" : "set not for sale"}</Button>
+                </Grid>
+                <Grid>
+                    <Button onClick={() => setStolenStatus(!isStolen)}>{isForSale ? "set stolen" : "set not stolen"}</Button>
+                </Grid>
             </Grid>) :
             (<Grid>
-                <Button>Buy</Button>
+                {<Button onClick={() => buy({ value: price })}>Buy for {price}</Button>}
             </Grid>)}
     </div>)
 }
