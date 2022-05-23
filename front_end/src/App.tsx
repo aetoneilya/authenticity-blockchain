@@ -1,7 +1,7 @@
 import React from 'react';
 import { DAppProvider, Mainnet, Kovan, Rinkeby } from '@usedapp/core';
 import { Header } from "./components/Header"
-import { Container, Typography } from "@material-ui/core"
+import { Container, Typography, Card } from "@material-ui/core"
 import { Main } from "./components/Main"
 
 const config = {
@@ -18,10 +18,9 @@ function App() {
         <DAppProvider config={config}>
             <Header />
             <Container maxWidth="md">
-                <Typography  variant="h1">Authenticity Check</Typography>
+                <Typography variant="h1">Authenticity Check</Typography>
                 <Main />
             </Container>
-
         </DAppProvider>
     );
 }

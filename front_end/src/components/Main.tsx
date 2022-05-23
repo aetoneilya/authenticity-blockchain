@@ -12,6 +12,7 @@ import {
     useGetPriceWei, useGetDescription, useChangeOwner, useSetPriceWei,
     useSetForSaleStatus, useSetStolenStatus, useBuy
 } from "../hooks/UseAuthenticity"
+import { QrReader } from "react-qr-reader"
 
 const handleChange = (event: React.ChangeEvent<{}>, newValue: string) => {
     console.log(newValue)
@@ -43,7 +44,9 @@ export const Main = () => {
     const { account } = useEthers()
 
     //TODO: replace in prod
-    const contractAddress = chainId === 42 || chainId === Rinkeby.chainId ? networkMapping[chainId.toString()]["Authenticity"][0] : constants.AddressZero
+    // networkMapping['42']["Authenticity"][0]
+    const [contractAddress, setContractAddress] = useState(constants.AddressZero)
+    // const contractAddress = chainId === 42 || chainId === Rinkeby.chainId ? networkMapping[chainId.toString()]["Authenticity"][0] : constants.AddressZero
     // var contractAddress = ''
 
     const networkName = chainId ? helperConfig[chainId] : "dev"
@@ -62,14 +65,10 @@ export const Main = () => {
     const [newPrice, setNewPrice] = useState('')
 
     const handleFind = () => {
-        // contractAddress = strContract
-        console.log(strContract)
+        console.log("New contract " + strContract)
+        setContractAddress(strContract)
+        console.log("Contract is " + contractAddress)
     }
-    // Origin owner {useGetOriginOwner(contractAddress)} {'\n'}
-    //         Is for sale {useGetIsForSale(contractAddress)?.toString()} {'\n'}
-    //         Is stolen {useGetIsStolen(contractAddress)?.toString()} {'\n'}
-    //         Price {price?.toString()} Wei {'\n'}
-    //         Description: {useGetDescription(contractAddress)?.toString()} {'\n'}
 
     const owner = useGetOwner(contractAddress)
     const originOwner = useGetOriginOwner(contractAddress)
@@ -79,6 +78,8 @@ export const Main = () => {
     const description = useGetDescription(contractAddress)
 
     const isUserOwner = owner === account
+
+    const [data, setData] = useState('No result');
 
     return (<div>
         <Grid direction="row" container spacing={2} alignItems="center">
@@ -93,19 +94,19 @@ export const Main = () => {
                 />
             </Grid>
             <Grid item xs={2}>
-                <Button onClick={handleFind} >Find</Button>
+                <Button onClick={handleFind}> Find</Button>
             </Grid>
         </Grid>
 
         <Typography variant="h5" component="pre">
-            Owner {owner} {'\n'}
-            Origin owner {originOwner} {'\n'}
+            Owner {isUserOwner ? "You" : owner} {'\n'}
+            Creator {originOwner} {'\n'}
             {isForSale ? "Open for SALE" : "Not for sale"} {'\n'}
             {isStolen ? "Stolen\n" : ""}
             Price {price?.toString()} Wei {'\n'}
             Description: {description?.toString()} {'\n'}
-
         </Typography>
+
         {isUserOwner ?
             (<Grid direction="row" spacing={5} item xs >
                 <Grid item xs >
@@ -132,7 +133,6 @@ export const Main = () => {
                         select
                         label="currency"
                         value={currencies[1].value}
-                        // onChange={handleChange}
                         helperText="Please select your currency"
                     >
                         {currencies.map((option) => (
@@ -144,15 +144,23 @@ export const Main = () => {
                     <Button onClick={() => setPriceWei(newPrice)}>Set Price</Button>
                 </Grid>
                 <Grid>
-                    <Button onClick={() => setForSaleStatus(!isForSale)}>{isForSale ? "set for sale" : "set not for sale"}</Button>
+                    <Button onClick={() => setForSaleStatus(!isForSale)}>{isForSale ? "set not for sale" : "set for sale"}</Button>
                 </Grid>
                 <Grid>
                     <Button onClick={() => setStolenStatus(!isStolen)}>{isForSale ? "set stolen" : "set not stolen"}</Button>
                 </Grid>
             </Grid>) :
-            (<Grid>
-                {<Button onClick={() => buy({ value: price })}>Buy for {price}</Button>}
-            </Grid>)}
+            (
+            <Button onClick={() => buy({ value: price })}>Buy for {price?.toString()} WEI</Button>
+            )}
+
+        <QrReader
+            onResult={(result, error) => {
+                if (!!result) {
+                    setContractAddress(result?.getText());
+                }
+                console.log("qr: " + result?.toString)
+            }}
+        />
     </div>)
 }
-// {contractAddress}/Balance {formattedTokenBalance}/<p>Balance {useEtherBalance(account)?.toString()}</p>
