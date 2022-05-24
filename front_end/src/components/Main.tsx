@@ -3,7 +3,6 @@ import { useEthers, Rinkeby } from "@usedapp/core"
 import helperConfig from "../helper-config.json"
 import networkMapping from "../chain-info/deployments/map.json"
 import { constants, utils } from "ethers"
-// import Authenticity from "../chain-info/contracts/Authenticity.json"
 import { Contract } from "@ethersproject/contracts"
 import { formatUnits } from "@ethersproject/units"
 import { Typography, TextField, Button, Grid, Box, MenuItem, makeStyles, Card, CardContent } from "@material-ui/core"
@@ -13,10 +12,6 @@ import {
     useSetForSaleStatus, useSetStolenStatus, useBuy
 } from "../hooks/UseAuthenticity"
 import { QrReader } from "react-qr-reader"
-
-const handleChange = (event: React.ChangeEvent<{}>, newValue: string) => {
-    console.log(newValue)
-}
 
 const useStyles = makeStyles({
     field: {
@@ -47,7 +42,6 @@ export const Main = () => {
     // networkMapping['42']["Authenticity"][0]
     const [contractAddress, setContractAddress] = useState(constants.AddressZero)
     // const contractAddress = chainId === 42 || chainId === Rinkeby.chainId ? networkMapping[chainId.toString()]["Authenticity"][0] : constants.AddressZero
-    // var contractAddress = ''
 
     const networkName = chainId ? helperConfig[chainId] : "dev"
     console.log("ChainId: " + chainId)
@@ -63,6 +57,7 @@ export const Main = () => {
     const [strContract, setStrContract] = useState('')
     const [strNewOwner, setStrNewOwner] = useState('')
     const [newPrice, setNewPrice] = useState('')
+    const [QRShow, setQRShow] = useState(false)
 
     const handleFind = () => {
         console.log("New contract " + strContract)
@@ -79,8 +74,6 @@ export const Main = () => {
 
     const isUserOwner = owner === account
 
-    const [data, setData] = useState('No result');
-
     return (<div>
         <Grid direction="row" container spacing={2} alignItems="center">
             <Grid item xs={8}>
@@ -95,8 +88,19 @@ export const Main = () => {
             </Grid>
             <Grid item xs={2}>
                 <Button onClick={handleFind}> Find</Button>
+                <Button onClick={() => { setQRShow(!QRShow) }}> QR</Button>
             </Grid>
         </Grid>
+        {QRShow ?
+            <QrReader
+                onResult={(result, error) => {
+                    if (!!result) {
+                        setContractAddress(result?.getText());
+                        setQRShow(false);
+                    }
+                    console.log("qr: " + result?.toString)
+                }}
+            /> : <></>}
 
         <Typography variant="h5" component="pre">
             Owner {isUserOwner ? "You" : owner} {'\n'}
@@ -151,16 +155,7 @@ export const Main = () => {
                 </Grid>
             </Grid>) :
             (
-            <Button onClick={() => buy({ value: price })}>Buy for {price?.toString()} WEI</Button>
+                <Button onClick={() => buy({ value: price })}>Buy for {price?.toString()} WEI</Button>
             )}
-
-        <QrReader
-            onResult={(result, error) => {
-                if (!!result) {
-                    setContractAddress(result?.getText());
-                }
-                console.log("qr: " + result?.toString)
-            }}
-        />
     </div>)
 }

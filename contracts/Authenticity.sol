@@ -45,6 +45,7 @@ contract Authenticity {
     function changeOwner(address newOwner) public isOwner {
         emit OwnerSet(owner, newOwner);
         owner = newOwner;
+        itemData.isForSale = false;
     }
 
     /**
@@ -105,6 +106,4 @@ contract Authenticity {
     function getDescription() external view returns (string memory) {
         return itemData.description;
     }
-
-
 }

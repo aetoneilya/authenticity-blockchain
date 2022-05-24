@@ -1,6 +1,6 @@
 dotenv: .env
 networks:
-  default: development
+  default: kovan
   rinkeby:
     verify: True
   mainnet-fork-dev:
