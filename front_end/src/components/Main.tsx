@@ -5,7 +5,7 @@ import networkMapping from "../chain-info/deployments/map.json"
 import { constants, utils } from "ethers"
 import { Contract } from "@ethersproject/contracts"
 import { formatUnits } from "@ethersproject/units"
-import { Typography, TextField, Button, Grid, Box, MenuItem, makeStyles, Card, CardContent } from "@material-ui/core"
+import { Typography, TextField, Button, Grid, Box, MenuItem, makeStyles, Card, CardContent, Divider } from "@material-ui/core"
 import {
     useGetOwner, useGetOriginOwner, useGetIsForSale, useGetIsStolen,
     useGetPriceWei, useGetDescription, useChangeOwner, useSetPriceWei,
@@ -18,6 +18,10 @@ const useStyles = makeStyles({
         marginTop: 20,
         marginBottom: 20,
         display: 'block'
+    },
+    spaces: {
+        marginTop: 20,
+        marginBottom: 20
     }
 })
 
@@ -32,6 +36,10 @@ const currencies = [
     },
 ];
 
+function validateInputAddresses(address : string){
+    return (/^(0x){1}[0-9a-fA-F]{40}$/i.test(address));
+}
+
 export const Main = () => {
     const classes = useStyles()
 
@@ -42,7 +50,7 @@ export const Main = () => {
     // networkMapping['42']["Authenticity"][0]
     const [contractAddress, setContractAddress] = useState(constants.AddressZero)
     // const contractAddress = chainId === 42 || chainId === Rinkeby.chainId ? networkMapping[chainId.toString()]["Authenticity"][0] : constants.AddressZero
-
+    
     const networkName = chainId ? helperConfig[chainId] : "dev"
     console.log("ChainId: " + chainId)
     console.log("NetworkName: " + networkName)
@@ -61,9 +69,12 @@ export const Main = () => {
 
     const handleFind = () => {
         console.log("New contract " + strContract)
-        setContractAddress(strContract)
+        // setContractAddress(strContract)
+        validateInputAddresses(strContract) ? setContractAddress(strContract) : setContractAddress(constants.AddressZero)
         console.log("Contract is " + contractAddress)
     }
+
+
 
     const owner = useGetOwner(contractAddress)
     const originOwner = useGetOriginOwner(contractAddress)
@@ -72,7 +83,11 @@ export const Main = () => {
     const price = useGetPriceWei(contractAddress)
     const description = useGetDescription(contractAddress)
 
-    const isUserOwner = owner === account
+    const dataGetSuccess = owner !== undefined
+    const isUserOwner = owner == account && dataGetSuccess
+
+    // let regexpAddress = new RegExp('/^((?!(badstring)).)*$/');
+    // regexpEmail.test('marco@expertcodebolg.com');
 
     return (<div>
         <Grid direction="row" container spacing={2} alignItems="center">
@@ -88,28 +103,33 @@ export const Main = () => {
             </Grid>
             <Grid item xs={2}>
                 <Button onClick={handleFind}> Find</Button>
-                <Button onClick={() => { setQRShow(!QRShow) }}> QR</Button>
+                <Button onClick={() => { setQRShow(!QRShow); setContractAddress(constants.AddressZero) }}> QR</Button>
             </Grid>
         </Grid>
+
         {QRShow ?
             <QrReader
                 onResult={(result, error) => {
                     if (!!result) {
-                        setContractAddress(result?.getText());
+                        handleFind()
+                        // setContractAddress(result?.getText());
                         setQRShow(false);
                     }
-                    console.log("qr: " + result?.toString)
                 }}
             /> : <></>}
 
-        <Typography variant="h5" component="pre">
-            Owner {isUserOwner ? "You" : owner} {'\n'}
-            Creator {originOwner} {'\n'}
-            {isForSale ? "Open for SALE" : "Not for sale"} {'\n'}
-            {isStolen ? "Stolen\n" : ""}
-            Price {price?.toString()} Wei {'\n'}
-            Description: {description?.toString()} {'\n'}
-        </Typography>
+        {dataGetSuccess ?
+            <Typography variant="h5" component="pre">
+                Owner {isUserOwner ? "You" : owner} {'\n'}
+                Creator {originOwner} {'\n'}
+                {isForSale ? "Open for SALE" : "Not for sale"} {'\n'}
+                {isStolen ? "Stolen\n" : ""}
+                Price {price?.toString()} Wei {'\n'}
+                Description: {description?.toString()} {'\n'}
+            </Typography>
+            : <></>}
+
+        <Divider className={classes.spaces}/>
 
         {isUserOwner ?
             (<Grid direction="row" spacing={5} item xs >
@@ -153,9 +173,13 @@ export const Main = () => {
                 <Grid>
                     <Button onClick={() => setStolenStatus(!isStolen)}>{isForSale ? "set stolen" : "set not stolen"}</Button>
                 </Grid>
-            </Grid>) :
-            (
-                <Button onClick={() => buy({ value: price })}>Buy for {price?.toString()} WEI</Button>
-            )}
+            </Grid>) : <></>
+        }
+
+        {dataGetSuccess && !isUserOwner ? <Button onClick={() => buy({ value: price })}>Buy for {price?.toString()} WEI</Button> 
+        : <></>}
+        {!dataGetSuccess ? <Typography variant="h5" component="pre" className={classes.spaces}>
+            No contract selected
+        </Typography> : <></>}
     </div>)
 }
